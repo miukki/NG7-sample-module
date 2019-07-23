@@ -1,0 +1,30 @@
+input {
+  &.disabled {
+    opacity: 0.4
+  }
+}
+
+.link-color {
+  color: #007cbb;
+  font-weight: 600;
+  vertical-align: super;
+  cursor: pointer;
+}
+.toggle-switch  {
+  display: flex;
+  justify-content: center;
+  .res-text {
+    align-self: center;
+  }
+}
+
+.toggle-change{
+  &.unavailable {
+    label{
+      &:before {
+        background-color: #c92100;
+        border-color: #c92100;
+      }
+    }
+  }
+}

@@ -1,0 +1,217 @@
+<!--Start Currency exchange limits and comissions table -->
+
+
+<h2 class="title">Currency exchange limits</h2>
+<clr-datagrid>
+  <clr-dg-column>Currency</clr-dg-column>
+  <clr-dg-column>Operation status</clr-dg-column>
+  <clr-dg-column>Operation, Min/Max</clr-dg-column>
+  <clr-dg-column>Cumulative limit status for 24 hours</clr-dg-column>
+  <clr-dg-column>Cumulative limit max for 24 hours</clr-dg-column>
+  <clr-dg-column>Cumulative limit status for 30 days</clr-dg-column>
+  <clr-dg-column>Cumulative limit max for 30 days</clr-dg-column>
+  <clr-dg-column></clr-dg-column>
+
+
+  <clr-dg-row *clrDgItems="let limit of limits" [clrDgItem]="limit">
+    <clr-dg-cell>{{limit.currency}}</clr-dg-cell>
+
+    <clr-dg-cell>
+        <div class="toggle-switch" 
+          [ngClass]="!limit.operation.enabled ? 'toggle-change unavailable': null">
+          <div>
+              <input type="checkbox" title="" [id]="'operation'+limit._id" [checked]="limit.operation.enabled" (click)="toggleAvailable(limit, 'operation')" >
+              <label [for]="'operation'+limit._id"></label>
+          </div>
+          <span class="res-text" *ngIf="!limit.operation.enabled">Disabled</span>
+          <span class="res-text" *ngIf="limit.operation.enabled">Enabled</span>
+        </div>
+    </clr-dg-cell>
+
+
+    <clr-dg-cell>{{limit.operation.min}} / {{limit.operation.max}}</clr-dg-cell>
+
+    <clr-dg-cell class="text-center"> 
+        <div class="toggle-switch" [ngClass]="!limit.cumulative.daily.enabled ? 'toggle-change unavailable': ''">
+          <div>
+              <input type="checkbox" title="" [id]="'cumulativeDaily'+limit._id" [checked]="limit.cumulative.daily.enabled" (click)="toggleAvailable(limit, 'daily')">
+              <label [for]="'cumulativeDaily'+limit._id"></label>
+          </div>
+          <span class="res-text" *ngIf="!limit.cumulative.daily.enabled">Disabled</span>
+          <span class="res-text" *ngIf="limit.cumulative.daily.enabled">Enabled</span>
+        </div>
+    </clr-dg-cell>
+
+    <clr-dg-cell class="text-center">
+        {{limit.cumulative.daily.max}}
+    </clr-dg-cell>
+
+    <clr-dg-cell class="text-center"> 
+        <div class="toggle-switch" [ngClass]="!limit.cumulative.monthly.enabled ? 'toggle-change unavailable': ''">
+          <div>
+              <input type="checkbox" title="" [id]="'cumulativeMonthly'+limit._id" [checked]="limit.cumulative.monthly.enabled" (click)="toggleAvailable(limit, 'monthly')">
+              <label [for]="'cumulativeMonthly'+limit._id"></label>
+          </div>
+          <span class="res-text" *ngIf="!limit.cumulative.monthly.enabled">Disabled</span>
+          <span class="res-text" *ngIf="limit.cumulative.monthly.enabled">Enabled</span>
+        </div>
+    </clr-dg-cell>
+
+    <clr-dg-cell class="text-center">
+        {{limit.cumulative.monthly.max}}
+    </clr-dg-cell>
+
+
+    <clr-dg-cell class="text-center">
+      <a class="link-color" (click)="editLimitOpenModal(limit)">Edit</a>
+    </clr-dg-cell>
+
+
+  </clr-dg-row>
+</clr-datagrid>
+
+<button class="btn btn-primary btn-sm float-lg-right" (click)="addLimit();">Add</button>
+
+
+<!-- modal -->
+<clr-modal [(clrModalOpen)]="open_modal" [clrModalSize]="'xl'">
+    <h3 class="modal-title font-title">Limit configuration</h3>
+  
+    <div class="modal-body">
+      <form name="myForm" [formGroup]="limitForm" (ngSubmit)="createLimit()">
+  
+        <section class="form-block">
+  
+          <div class="form-group row">
+            <div class="col-md-1">
+              <label for="type">Type Limit:</label>
+            </div>
+            <div class="col-md-5">
+              <div class="select form-control">
+                <select [disabled]="true" id="type" formControlName="type" name="type">
+                  <option *ngFor="let type of types" 
+                    [attr.selected]="type.name == 'exchange' ? true : false"
+                    [value]="type.name"
+                    [disabled]="true"
+                  >
+                      {{type.name}}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-1">
+              <label for="currency">Currency:</label>
+            </div>
+            <div class="col-md-5">
+              <div class="select form-control">
+                <select [disabled]="limitForm.value._id" id="currency" formControlName="currency" name="currency">
+                  <option *ngFor="let currency of currencies" 
+                    [value]="currency.currency"
+                    [disabled]="limitForm.value._id"
+                  >
+                    {{currency.currency}}
+                  </option>
+                </select>
+              </div>
+            </div>
+          </div>
+  
+          <div class="form-group row">
+            <div class="col-md-2 col-sm-3">
+              <label for="type">Operation Limit:</label>
+            </div>
+            <div class="col-md-2 col-sm-9">
+              <div class="toggle-switch"
+                [ngClass]="!limitForm.value.operationEnabled ? 'toggle-change unavailable': ''">
+                <input formControlName="operationEnabled" name="operationEnabled" value="" type="checkbox" title="" (click)="toggleOperation()"
+                        [id]="'operationEnabled'"
+                        [checked]="limitForm.value.operationEnabled">
+                <label [for]="'operationEnabled'">
+                  <span class="res-text"></span>
+                </label>
+              </div>
+            </div>
+  
+            <div class="col-md-2 col-sm-3 text-center">
+              <label for="min_limit">Min Limit:</label>
+            </div>
+            <div class="col-md-2 col-sm-9">
+              <label for="min_limit">
+                  <input [ngClass]="!limitForm.value.operationEnabled ? 'disabled': '' " [readonly]="!limitForm.value.operationEnabled" type="number" id="min_limit" placeholder="" value="{{operation.min}}" name="min" formControlName="min" (change)="setNumber($event, 'min')" />
+              </label>
+            </div>
+  
+            <div class="col-md-2 col-sm-3 text-center">
+              <label for="max_limit">Max Limit:</label>
+            </div>
+            <div class="col-md-2 col-sm-9">
+              <label for="max_limit">
+                  <input [ngClass]="!limitForm.value.operationEnabled ? 'disabled': '' " [readonly]="!limitForm.value.operationEnabled" type="number" id="max_limit" placeholder="" value="{{operation.max}}" name="max" formControlName="max" (change)="setNumber($event, 'max')" />
+              </label>
+            </div>
+  
+          </div>
+  
+          <!-- Cumulative daily -->
+          <div class="form-group row">
+              <div class="col-md-2 col-sm-3">
+                <label for="type">Cumulative daily:</label>
+              </div>
+              <div class="col-md-2 col-sm-9">
+                <div class="toggle-switch"
+                  [ngClass]="!limitForm.value.cumulativeDailyEnabled ? 'toggle-change unavailable': ''">
+                  <input formControlName="cumulativeDailyEnabled" name="cumulativeDailyEnabled" value="" type="checkbox" title="" (click)="toggleCumulative('daily')" [id]="'cumulativeDailyEnabled'" [checked]="limitForm.value.cumulativeDailyEnabled">
+                  <label [for]="'cumulativeDailyEnabled'">
+                    <span class="res-text"></span>
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-2 col-sm-3 text-center">
+                  <label for="cumulative_daily_max_limit">Max Limit:</label>
+                </div>
+                <div class="col-md-2 col-sm-9">
+                  <label for="cumulative_daily_max_limit">
+                      <input [ngClass]="!limitForm.value.cumulativeDailyEnabled ? 'disabled': '' " [readonly]="!limitForm.value.cumulativeDailyEnabled" type="number" id="cumulative_daily_max_limit" placeholder="" value="{{cumulative.daily.max}}" name="cumulativeDailyMax" formControlName="cumulativeDailyMax" (change)="setNumber($event, 'cumulativeDailyMax')" />
+                  </label>
+                </div>
+            </div>
+  
+  
+            <!-- Cumulative monthly -->
+            <div class="form-group row">
+                <div class="col-md-2 col-sm-3">
+                  <label for="type">Cumulative monthly:</label>
+                </div>
+                <div class="col-md-2 col-sm-9">
+                  <div class="toggle-switch"
+                    [ngClass]="!limitForm.value.cumulativeMonthlyEnabled ? 'toggle-change unavailable': ''">
+                    <input formControlName="cumulativeMonthlyEnabled" name="cumulativeMonthlyEnabled" value="" type="checkbox" title="" (click)="toggleCumulative('monthly')" [id]="'cumulativeMonthlyEnabled'" [checked]="limitForm.value.cumulativeMonthlyEnabled">
+                    <label [for]="'cumulativeMonthlyEnabled'">
+                      <span class="res-text"></span>
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-2 col-sm-3 text-center">
+                    <label for="cumulative_monthly_max_limit">Max Limit:</label>
+                  </div>
+                  <div class="col-md-2 col-sm-9">
+                    <label for="cumulative_monthly_max_limit">
+                        <input [ngClass]="!limitForm.value.cumulativeMonthlyEnabled ? 'disabled': '' " [readonly]="!limitForm.value.cumulativeMonthlyEnabled" type="number" id="cumulative_monthly_max_limit" placeholder="" value="{{cumulative.monthly.max}}" name="cumulativeMonthlyMax" formControlName="cumulativeMonthlyMax" (change)="setNumber($event, 'cumulativeMonthlyMax')" />
+                    </label>
+                  </div>
+              </div>
+              
+  
+  
+        </section>
+  
+      </form>
+    </div>
+  
+  
+    <div class="modal-footer">
+      <button type="button" class="btn btn-primary" (click)="clearForm()">Clear form</button>
+      <button type="button" class="btn btn-primary" (click)="createLimit()" [disabled]="limitForm.invalid" >Confirm</button>
+    </div>
+  </clr-modal>
+  
